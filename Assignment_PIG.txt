@@ -1,0 +1,25 @@
+/* load orders.csv */
+ordersCSV = LOAD '/user/maria_dev/diplomacy/orders.csv' 
+USING PigStorage(',')  /* add comma delimeter */
+AS /* define the fields and datatypes */
+	(game_id:chararray,
+    unit_id:chararray,
+    unit_order:chararray,
+    location:chararray,
+    target:chararray,
+    target_dest:chararray,
+    success:chararray,
+    reason:chararray,
+    turn_num:chararray);
+    
+/* filter the dataset to contain orders that with their target field as "Holland" */
+filter_by_target = FILTER ordersCSV BY target == '"Holland"'; 
+
+/* organise the dataset to group together the locations with the target being "Holland" */
+/* count the number of times each combination of location and target has occured*/
+count_occurances = FOREACH (GROUP filter_by_target BY (location, target)) GENERATE group, COUNT(filter_by_target.location);
+
+/* return the sorted a dataset with the records' locations ascending*/
+sort_results = ORDER count_occurances BY $0 ASC;
+
+DUMP sort_results;
